@@ -46,8 +46,7 @@ class HcaToLattice:
         sub_uuid = submission['uuid']['uuid']
         self.logger.info(f'Converting submission with UUID {sub_uuid}...')
 
-        # to_convert = ['biomaterials', 'protocols', 'processes', 'files']
-        to_convert = ['biomaterials']
+        to_convert = ['biomaterials', 'protocols', 'processes', 'files']
         for entity_type in to_convert:
             entities = self.ingest_api.get_entities(submission['_links']['self']['href'], entity_type)
             for entity in entities:
