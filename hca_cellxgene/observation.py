@@ -136,12 +136,12 @@ class IngestObservation(Observation):
             cell_suspension
         )
 
-        while IngestObservation.__get_type_of_entity(self.flat_chain.current) != 'donor_organism':
-            derived_by = IngestObservation.__get_entities_from_link(self.flat_chain.current, 'derivedByProcesses')
+        while self.flat_chain.current[0] != 'donor_organism':
+            derived_by = IngestObservation.__get_entities_from_link(self.flat_chain.current[1], 'derivedByProcesses')
             if len(derived_by) > 1:
                 # ASSUMPTION: a biomaterial can only be derived by one process
                 logging.warning(
-                    f'Biomaterial {self.flat_chain.current["uuid"]["uuid"]} '
+                    f'Biomaterial {self.flat_chain.current[1]["uuid"]["uuid"]} '
                     f'is derived by multiple processes. Only using the first.'
                 )
             derived_by = derived_by[0]
