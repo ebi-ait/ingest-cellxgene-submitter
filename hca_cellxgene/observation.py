@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from ingest.api.ingestapi import IngestApi
 from pandas import DataFrame
 
+from hca_cellxgene.flat_chain import FlatChain
+
 
 class Observation:
     def __init__(self, **kwargs):
@@ -43,9 +45,9 @@ class IngestObservation(Observation):
         self.__build_biomaterial_chain()
 
         # There must always be a donor and a specimen but cell line and organoid are optional parents
-        specimen_from_organism = self.__get_entity_with_type('specimen_from_organism')
-        donor_organism = self.__get_entity_with_type('donor_organism')
-        lib_prep = self.__get_entity_with_type('library_preparation_protocol')
+        specimen_from_organism = self.flat_chain.get_link('specimen_from_organism')
+        donor_organism = self.flat_chain.get_link('donor_organism')
+        lib_prep = self.flat_chain.get_link('library_preparation_protocol')
 
         diseases = specimen_from_organism['content']['diseases']
         if len(diseases) > 1:
@@ -105,30 +107,41 @@ class IngestObservation(Observation):
     def __get_type_of_entity(entity: dict) -> str:
         return entity['content']['describedBy'].split('/')[-1]
 
+    def __add_entities_to_chain(self, entities_to_add: [dict], process_uuid: str, entity_generic_type: str) -> None:
+        if len(entities_to_add) > 1:
+            # ASSUMPTION: a biomaterial can only be derived by one protocol
+            logging.warning(
+                f'Process {process_uuid} has multiple '
+                f'{entity_generic_type}s. Only using the first.'
+            )
+
+        to_add = entities_to_add[0]
+        entity_type = IngestObservation.__get_type_of_entity(to_add)
+        self.flat_chain.append(entity_type, to_add)
+        logging.info(f'Added {entity_type} {entities_to_add[0]["uuid"]["uuid"]} to chain.')
+
     def __build_biomaterial_chain(self) -> None:
         logging.info(f'Building chain of biomaterials and protocols for cell suspension {self.cell_suspension_uuid}.')
         # Build linked list of biomaterial -> protocol (?) -> biomaterial from lib prep protocol to donor organism
         cell_suspension = self.__get_cell_suspension()
-        cell_suspension_type = IngestObservation.__get_type_of_entity(cell_suspension)
         lib_prep = IngestObservation.__get_lib_prep_for_cell_suspension(cell_suspension)
-        lib_prep['child'] = cell_suspension_type
 
-        # Behaves like a linked list but flattened.
-        # Each value in the dict has a 'child' which is the key for another value in the dict
-        # Can do this since we know there can only be one entity of each entity_type in the chain
-        # Enables faster look ups
-        self.flat_chain = {
-            IngestObservation.__get_type_of_entity(lib_prep): lib_prep,
-            cell_suspension_type: cell_suspension
-        }
+        # Can use a FlatChain since we know there can only be one entity of each entity_type in the chain
+        self.flat_chain = FlatChain(
+            IngestObservation.__get_type_of_entity(lib_prep),
+            lib_prep
+        ).append(
+            IngestObservation.__get_type_of_entity(cell_suspension),
+            cell_suspension
+        )
 
-        cur_node = self.flat_chain[cell_suspension_type] # cell suspension
         while 1:
-            derived_by = IngestObservation.__get_entities_from_link(cur_node, 'derivedByProcesses')
+            derived_by = IngestObservation.__get_entities_from_link(self.flat_chain.current, 'derivedByProcesses')
             if len(derived_by) > 1:
                 # ASSUMPTION: a biomaterial can only be derived by one process
                 logging.warning(
-                    f'Biomaterial {cur_node["uuid"]["uuid"]} is derived by multiple processes. Only using the first.'
+                    f'Biomaterial {self.flat_chain.current["uuid"]["uuid"]} '
+                    f'is derived by multiple processes. Only using the first.'
                 )
             derived_by = derived_by[0]
 
@@ -137,41 +150,22 @@ class IngestObservation(Observation):
 
             if len(protocols_to_derive) > 0:
                 # Protocols may or may not exist for deriving a given biomaterial
-                if len(protocols_to_derive) > 1:
-                    # ASSUMPTION: a biomaterial can only be derived by one protocol
-                    logging.warning(
-                        f'Process {derived_by["uuid"]["uuid"]} has multiple protocols. Only using the first.'
-                    )
-
-                protocols_to_derive_type = IngestObservation.__get_type_of_entity(protocols_to_derive[0])
-                self.flat_chain[protocols_to_derive_type] = protocols_to_derive[0]
-                cur_node['child'] = protocols_to_derive_type
-                cur_node = self.flat_chain[protocols_to_derive_type]
-                logging.info(f'Added {protocols_to_derive_type} {cur_node["uuid"]["uuid"]} to chain.')
-
-            # (e.g. cell suspension may have multiple organoids) but they should share properties we care about
-            if len(biomaterials_to_derive) > 1:
-                # ASSUMPTION: A biomaterial can only be derived by one biomaterial
-                logging.warning(
-                    f'Process {derived_by["uuid"]["uuid"]} has multiple biomaterials. Only using the first.'
+                self.__add_entities_to_chain(
+                    protocols_to_derive, derived_by['uuid']['uuid'], 'protocol'
                 )
 
-            biomaterials_to_derive_type = IngestObservation.__get_type_of_entity(biomaterials_to_derive[0])
-            self.flat_chain[biomaterials_to_derive_type] = biomaterials_to_derive[0]
-            cur_node['child'] = biomaterials_to_derive_type
-            cur_node = self.flat_chain[biomaterials_to_derive_type]
-            logging.info(
-                f'Added {IngestObservation.__get_type_of_entity(cur_node)} {cur_node["uuid"]["uuid"]} to chain.'
+            self.__add_entities_to_chain(
+                biomaterials_to_derive, derived_by['uuid']['uuid'], 'biomaterial'
             )
 
-            if IngestObservation.__get_type_of_entity(cur_node) == 'donor_organism':
+            if IngestObservation.__get_type_of_entity(self.flat_chain.current) == 'donor_organism':
                 break
 
     def __get_tissue_ontology_term(self) -> Optional[str]:
         to_try = ['organoid', 'cell_line', 'specimen_from_organism']
         try:
             for biomaterial_type in to_try:
-                biomaterial = self.__get_entity_with_type(biomaterial_type)
+                biomaterial = self.flat_chain.get_link(biomaterial_type)
                 if biomaterial and biomaterial_type == to_try[0]:
                     return biomaterial['content']['model_organ_part']['text']
                 if biomaterial and biomaterial_type == to_try[1]:
@@ -181,6 +175,3 @@ class IngestObservation(Observation):
                 return None
         except KeyError:
             return None
-
-    def __get_entity_with_type(self, entity_type: str) -> Optional[dict]:
-        return self.flat_chain[entity_type]
