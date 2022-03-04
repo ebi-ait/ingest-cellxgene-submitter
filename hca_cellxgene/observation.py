@@ -16,6 +16,7 @@ class Observation:
     def __init__(self, **kwargs):
         load_dotenv()
         self.fields = [
+            'sample_id',
             'assay_ontology_term_id',
             # Ignoring the below for now: talk to Wei
             # 'cell_type_ontology_term_id',
@@ -47,6 +48,7 @@ class IngestObservation(Observation):
         self.__build_biomaterial_chain()
 
         # There must always be a donor and a specimen but cell line and organoid are optional nodes in tree
+        cell_suspension = self.flat_chain.get_link('cell_suspension')
         specimen_from_organism = self.flat_chain.get_link('specimen_from_organism')
         donor_organism = self.flat_chain.get_link('donor_organism')
         lib_prep = self.flat_chain.get_link('library_preparation_protocol')
@@ -59,6 +61,7 @@ class IngestObservation(Observation):
             )
 
         data = {
+            'sample_id': get_nested(cell_suspension, ['content', 'biomaterial_core', 'biomaterial_id']),
             'assay_ontology_term_id': get_nested(lib_prep, ['content', 'library_construction_method', 'text']),
             'development_stage_ontology_term_id:human':
                 get_nested(donor_organism, ['content', 'development_stage', 'text']),
