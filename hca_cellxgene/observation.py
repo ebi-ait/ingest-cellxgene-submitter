@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from ingest.api.ingestapi import IngestApi
 from pandas import DataFrame
 
-from hca_cellxgene.flat_chain import FlatChain
+from hca_cellxgene.helpers.flat_chain import FlatChain
 
 
 class Observation:
@@ -28,7 +28,8 @@ class Observation:
         ]
 
         for field in self.fields:
-            self.__setattr__(field, kwargs.get(field, 'UNSET') or 'UNSET')
+            val_if_none = 'UNSET'
+            self.__setattr__(field, kwargs.get(field, val_if_none) or val_if_none)
 
     def to_data_frame(self) -> DataFrame:
         to_display = {key: self.__dict__[key] for key in self.fields}
@@ -44,7 +45,7 @@ class IngestObservation(Observation):
 
         self.__build_biomaterial_chain()
 
-        # There must always be a donor and a specimen but cell line and organoid are optional parents
+        # There must always be a donor and a specimen but cell line and organoid are optional nodes in tree
         specimen_from_organism = self.flat_chain.get_link('specimen_from_organism')
         donor_organism = self.flat_chain.get_link('donor_organism')
         lib_prep = self.flat_chain.get_link('library_preparation_protocol')
@@ -135,7 +136,7 @@ class IngestObservation(Observation):
             cell_suspension
         )
 
-        while 1:
+        while IngestObservation.__get_type_of_entity(self.flat_chain.current) != 'donor_organism':
             derived_by = IngestObservation.__get_entities_from_link(self.flat_chain.current, 'derivedByProcesses')
             if len(derived_by) > 1:
                 # ASSUMPTION: a biomaterial can only be derived by one process
@@ -157,9 +158,6 @@ class IngestObservation(Observation):
             self.__add_entities_to_chain(
                 biomaterials_to_derive, derived_by['uuid']['uuid'], 'biomaterial'
             )
-
-            if IngestObservation.__get_type_of_entity(self.flat_chain.current) == 'donor_organism':
-                break
 
     def __get_tissue_ontology_term(self) -> Optional[str]:
         to_try = ['organoid', 'cell_line', 'specimen_from_organism']

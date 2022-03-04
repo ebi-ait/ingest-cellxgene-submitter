@@ -1,6 +1,6 @@
 import argparse
 import logging
-from .utils import write_json_file
+from hca_cellxgene.helpers.utils import write_json_file
 import os
 from .hca_lattice import HcaToLattice
 

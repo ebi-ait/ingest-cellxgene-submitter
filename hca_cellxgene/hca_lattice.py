@@ -5,7 +5,7 @@ from typing import Generator
 from ingest.api.ingestapi import IngestApi
 from json_converter.json_mapper import JsonMapper
 
-import hca_cellxgene.utils as utils
+import hca_cellxgene.helpers.utils as utils
 
 
 class HcaToLattice:
