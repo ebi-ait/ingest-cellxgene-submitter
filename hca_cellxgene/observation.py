@@ -109,18 +109,26 @@ class IngestObservation(Observation):
         logging.info(f'Building chain of biomaterials and protocols for cell suspension {self.cell_suspension_uuid}.')
         # Build linked list of biomaterial -> protocol (?) -> biomaterial from lib prep protocol to donor organism
         cell_suspension = self.__get_cell_suspension()
+        cell_suspension_type = IngestObservation.__get_type_of_entity(cell_suspension)
         lib_prep = IngestObservation.__get_lib_prep_for_cell_suspension(cell_suspension)
-        lib_prep['child'] = cell_suspension
+        lib_prep['child'] = cell_suspension_type
 
-        self.chain = lib_prep
+        # Behaves like a linked list but flattened.
+        # Each value in the dict has a 'child' which is the key for another value in the dict
+        # Can do this since we know there can only be one entity of each entity_type in the chain
+        # Enables faster look ups
+        self.flat_chain = {
+            IngestObservation.__get_type_of_entity(lib_prep): lib_prep,
+            cell_suspension_type: cell_suspension
+        }
 
-        cur_leaf = self.chain['child']  # cell_suspension
+        cur_node = self.flat_chain[cell_suspension_type] # cell suspension
         while 1:
-            derived_by = IngestObservation.__get_entities_from_link(cur_leaf, 'derivedByProcesses')
+            derived_by = IngestObservation.__get_entities_from_link(cur_node, 'derivedByProcesses')
             if len(derived_by) > 1:
                 # ASSUMPTION: a biomaterial can only be derived by one process
                 logging.warning(
-                    f'Biomaterial {cur_leaf["uuid"]["uuid"]} is derived by multiple processes. Only using the first.'
+                    f'Biomaterial {cur_node["uuid"]["uuid"]} is derived by multiple processes. Only using the first.'
                 )
             derived_by = derived_by[0]
 
@@ -135,11 +143,11 @@ class IngestObservation(Observation):
                         f'Process {derived_by["uuid"]["uuid"]} has multiple protocols. Only using the first.'
                     )
 
-                cur_leaf['child'] = protocols_to_derive[0]
-                cur_leaf = cur_leaf['child']
-                logging.info(
-                    f'Added {IngestObservation.__get_type_of_entity(cur_leaf)} {cur_leaf["uuid"]["uuid"]} to chain.'
-                )
+                protocols_to_derive_type = IngestObservation.__get_type_of_entity(protocols_to_derive[0])
+                self.flat_chain[protocols_to_derive_type] = protocols_to_derive[0]
+                cur_node['child'] = protocols_to_derive_type
+                cur_node = self.flat_chain[protocols_to_derive_type]
+                logging.info(f'Added {protocols_to_derive_type} {cur_node["uuid"]["uuid"]} to chain.')
 
             # (e.g. cell suspension may have multiple organoids) but they should share properties we care about
             if len(biomaterials_to_derive) > 1:
@@ -148,13 +156,15 @@ class IngestObservation(Observation):
                     f'Process {derived_by["uuid"]["uuid"]} has multiple biomaterials. Only using the first.'
                 )
 
-            cur_leaf['child'] = biomaterials_to_derive[0]
-            cur_leaf = cur_leaf['child']
+            biomaterials_to_derive_type = IngestObservation.__get_type_of_entity(biomaterials_to_derive[0])
+            self.flat_chain[biomaterials_to_derive_type] = biomaterials_to_derive[0]
+            cur_node['child'] = biomaterials_to_derive_type
+            cur_node = self.flat_chain[biomaterials_to_derive_type]
             logging.info(
-                f'Added {IngestObservation.__get_type_of_entity(cur_leaf)} {cur_leaf["uuid"]["uuid"]} to chain.'
+                f'Added {IngestObservation.__get_type_of_entity(cur_node)} {cur_node["uuid"]["uuid"]} to chain.'
             )
 
-            if IngestObservation.__get_type_of_entity(cur_leaf) == 'donor_organism':
+            if IngestObservation.__get_type_of_entity(cur_node) == 'donor_organism':
                 break
 
     def __get_tissue_ontology_term(self) -> Optional[str]:
@@ -173,10 +183,4 @@ class IngestObservation(Observation):
             return None
 
     def __get_entity_with_type(self, entity_type: str) -> Optional[dict]:
-        cur_leaf = self.chain
-        while 1:
-            if IngestObservation.__get_type_of_entity(cur_leaf) == entity_type:
-                return cur_leaf
-            if 'child' not in cur_leaf:
-                return None
-            cur_leaf = cur_leaf['child']
+        return self.flat_chain[entity_type]
