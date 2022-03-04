@@ -77,7 +77,10 @@ class IngestObservation(Observation):
         super().__init__(**data)
 
     def __get_cell_suspension(self):
-        return self.ingest_api.get_entity_by_uuid('biomaterials', self.cell_suspension_uuid)
+        result = self.ingest_api.get_entity_by_uuid('biomaterials', self.cell_suspension_uuid)
+        if IngestObservation.__get_type_of_entity(result) != 'cell_suspension':
+            raise TypeError("Is not a cell suspension")
+        return result
 
     @staticmethod
     def __get_lib_prep_for_cell_suspension(cell_suspension) -> dict:
