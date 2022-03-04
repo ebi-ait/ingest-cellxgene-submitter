@@ -1,6 +1,5 @@
 import logging
 import os
-from collections import defaultdict
 from typing import Union, Optional
 
 import pandas as pd
@@ -116,7 +115,6 @@ class IngestObservation(Observation):
 
     def __add_entities_to_chain(self, entities_to_add: [dict], process_uuid: str, entity_generic_type: str) -> None:
         if len(entities_to_add) > 1:
-            # ASSUMPTION: a biomaterial can only be derived by one protocol
             logging.warning(
                 f'Process {process_uuid} has multiple '
                 f'{entity_generic_type}s. Only using the first.'
@@ -125,7 +123,7 @@ class IngestObservation(Observation):
         to_add = entities_to_add[0]
         entity_type = IngestObservation.__get_type_of_entity(to_add)
         self.flat_chain.append(entity_type, to_add)
-        logging.info(f'Added {entity_type} {entities_to_add[0]["uuid"]["uuid"]} to chain.')
+        logging.info(f'Added {entity_type} {to_add["uuid"]["uuid"]} to chain.')
 
     def __build_biomaterial_chain(self) -> None:
         logging.info(f'Building chain of biomaterials and protocols for cell suspension {self.cell_suspension_uuid}.')
