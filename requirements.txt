@@ -4,3 +4,4 @@ anndata
 numpy
 python-dotenv
 tqdm
+scipy

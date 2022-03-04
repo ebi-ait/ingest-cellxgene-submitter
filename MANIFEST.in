@@ -1,1 +1,2 @@
 include hca_cellxgene/specifications/*.json
+include .env

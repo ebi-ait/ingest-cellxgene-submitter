@@ -40,7 +40,7 @@ class IngestObservation(Observation):
     def __init__(self, cell_suspension_uuid):
         self.cell_suspension_uuid = cell_suspension_uuid
 
-        ingest_base = os.environ.get('INGEST_API')
+        ingest_base = os.environ.get('INGEST_API', 'https://api.ingest.archive.data.humancellatlas.org/')
         self.ingest_api = IngestApi(ingest_base)
 
         self.__build_biomaterial_chain()

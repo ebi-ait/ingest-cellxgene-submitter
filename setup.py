@@ -19,7 +19,7 @@ setup(
         install_requires,
     ],
     entry_points={
-        'console_scripts': ['hca-to-lattice=hca_cellxgene.cli:main'],
+        'console_scripts': ['create-obs-layer=hca_cellxgene.cli:create_obs_layer'],
     },
     include_package_data=True
 )

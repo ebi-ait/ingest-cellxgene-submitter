@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-wd = Path(os.environ.get('TMP_DIR'), str(uuid.uuid4()))
+wd = Path(os.environ.get('TMP_DIR', 'tmp'), str(uuid.uuid4()))
 wd.mkdir(parents=True)
 
 # Just a global dict to access runtime context

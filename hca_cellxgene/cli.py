@@ -1,33 +1,30 @@
 import argparse
 import logging
-from hca_cellxgene.helpers.utils import write_json_file
 import os
-from .hca_lattice import HcaToLattice
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+from hca_cellxgene.observation import IngestObservation
+
+logging.basicConfig()
+logger = logging.getLogger()
+
+load_dotenv()
 
 
-def main():
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
-    parser = argparse.ArgumentParser(description='Convert an HCA project into a lattice project.')
-    parser.add_argument('--uuid', type=str, help='HCA project UUID')
+def create_obs_layer():
+    parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
+    parser.add_argument('--uuid', type=str, help='HCA cell suspension UUID', required=True)
     parser.add_argument(
-        '-o', '--output', type=str, help='Output directory', default=os.path.join(os.curdir, 'converted')
+        '-o', '--output', type=str, help='Output file', default=Path(os.environ.get('OUTPUT_PATH', 'output'), 'obs.csv')
     )
+    parser.add_argument('--debug', action='store_true', default=False)
 
     args = parser.parse_args()
 
-    for sub_uuid, lattice_schema_name, entity_name, converted in HcaToLattice(args.output).convert_project(args.uuid):
-        out_file = os.path.join(
-            args.output,
-            args.uuid,
-            sub_uuid,
-            lattice_schema_name,
-            entity_name + '.json'
-        )
+    if args.debug:
+        logger.setLevel(logging.INFO)
 
-        write_json_file(out_file, converted)
-
-
-if __name__ == "__main__":
-    main()
+    df = IngestObservation(args.uuid).to_data_frame()
+    df.to_csv(args.output)
