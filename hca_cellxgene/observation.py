@@ -1,5 +1,6 @@
 import logging
 import os
+from collections import defaultdict
 from typing import Union, Optional
 
 import pandas as pd
@@ -9,6 +10,7 @@ from ingest.api.ingestapi import IngestApi
 from pandas import DataFrame
 
 from hca_cellxgene.helpers.flat_chain import FlatChain
+from hca_cellxgene.helpers.utils import get_nested
 
 
 class Observation:
@@ -57,16 +59,20 @@ class IngestObservation(Observation):
                 f'Biomaterial {specimen_from_organism["uuid"]["uuid"]} has multiple diseases. Using the first.'
             )
 
-        super().__init__(**{
-            'assay_ontology_term_id': lib_prep['content']['library_construction_method']['text'],
-            'development_stage_ontology_term_id:human': donor_organism['content']['development_stage']['text'],
-            'disease_ontology_term_id': diseases[0]['text'],
-            'ethnicity_ontology_term_id:human': donor_organism['content']['human_specific']['ethnicity'][0]['text'],
+        data = {
+            'assay_ontology_term_id': get_nested(lib_prep, ['content', 'library_construction_method', 'text']),
+            'development_stage_ontology_term_id:human':
+                get_nested(donor_organism, ['content', 'development_stage', 'text']),
+            'disease_ontology_term_id': get_nested(diseases, [0, 'text']),
+            'ethnicity_ontology_term_id:human':
+                get_nested(donor_organism, ['content', 'human_specific', 'ethnicity', 0, 'text']),
             'is_primary_data': True,
-            'organism_ontology_term_id': donor_organism['content']['genus_species'][0]['text'],
-            'sex_ontology_term_id': donor_organism['content']['sex'],
+            'organism_ontology_term_id': get_nested(donor_organism, ['content', 'genus_species', 0, 'text']),
+            'sex_ontology_term_id': get_nested(donor_organism, ['content', 'sex']),
             'tissue_ontology_term_id': self.__get_tissue_ontology_term()
-        })
+        }
+
+        super().__init__(**data)
 
     def __get_cell_suspension(self):
         return self.ingest_api.get_entity_by_uuid('biomaterials', self.cell_suspension_uuid)
@@ -170,5 +176,5 @@ class IngestObservation(Observation):
             if biomaterial and biomaterial_type == to_try[1]:
                 return biomaterial['content']['tissue']['text']
             if biomaterial and biomaterial_type == to_try[2]:
-                return biomaterial['content']['organ_parts']['text']
+                return biomaterial['content']['organ_parts'][0]['text']
         return None

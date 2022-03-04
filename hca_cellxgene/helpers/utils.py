@@ -52,3 +52,11 @@ def download_file(url) -> os.PathLike:
     finally:
         f.close()
         progress_bar.close()
+
+
+def get_nested(d: dict, list_of_keys: [str], default=None):
+    for k in list_of_keys:
+        if k not in d:
+            return default
+        d = d[k]
+    return d
