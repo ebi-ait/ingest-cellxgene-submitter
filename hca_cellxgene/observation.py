@@ -161,15 +161,14 @@ class IngestObservation(Observation):
 
     def __get_tissue_ontology_term(self) -> Optional[str]:
         to_try = ['organoid', 'cell_line', 'specimen_from_organism']
-        try:
-            for biomaterial_type in to_try:
-                biomaterial = self.flat_chain.get_link(biomaterial_type)
-                if biomaterial and biomaterial_type == to_try[0]:
+        for biomaterial_type in to_try:
+            biomaterial = self.flat_chain.get_link(biomaterial_type)
+            if biomaterial and biomaterial_type == to_try[0]:
+                if 'model_organ_part' in biomaterial['content']:
                     return biomaterial['content']['model_organ_part']['text']
-                if biomaterial and biomaterial_type == to_try[1]:
-                    return biomaterial['content']['tissue']['text']
-                if biomaterial and biomaterial_type == to_try[2]:
-                    return biomaterial['content']['organ_parts']['text']
-                return None
-        except KeyError:
-            return None
+                return biomaterial['content']['model_organ']['text']
+            if biomaterial and biomaterial_type == to_try[1]:
+                return biomaterial['content']['tissue']['text']
+            if biomaterial and biomaterial_type == to_try[2]:
+                return biomaterial['content']['organ_parts']['text']
+        return None

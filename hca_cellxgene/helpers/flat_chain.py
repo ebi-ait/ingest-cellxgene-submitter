@@ -39,7 +39,7 @@ class FlatChain:
     def set(self, key: str, value: dict) -> 'FlatChain':
         if key not in self.__chain:
             raise KeyError("Key not in chain")
-        
+
         self.__chain[key] = value
         return self
 
