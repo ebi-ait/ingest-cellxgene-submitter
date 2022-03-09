@@ -19,7 +19,10 @@ setup(
         install_requires,
     ],
     entry_points={
-        'console_scripts': ['create-obs-layer=hca_cellxgene.cli:create_obs_layer'],
+        'console_scripts': [
+            'create-obs-layer=hca_cellxgene.cli:create_obs_layer',
+            'create-h5ad=hca_cellxgene.cli:create_h5ad'
+        ],
     },
     include_package_data=True
 )
