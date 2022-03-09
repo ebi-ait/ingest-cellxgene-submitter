@@ -18,8 +18,7 @@ class Observation:
         self.fields = [
             'sample_id',
             'assay_ontology_term_id',
-            # Ignoring the below for now: talk to Wei
-            # 'cell_type_ontology_term_id',
+            'cell_type_ontology_term_id',
             'development_stage_ontology_term_id:human',
             'disease_ontology_term_id',
             'ethnicity_ontology_term_id:human',
@@ -39,7 +38,7 @@ class Observation:
 
 
 class IngestObservation(Observation):
-    def __init__(self, cell_suspension_uuid):
+    def __init__(self, cell_suspension_uuid, cell_type):
         self.cell_suspension_uuid = cell_suspension_uuid
 
         ingest_base = os.environ.get('INGEST_API', 'https://api.ingest.archive.data.humancellatlas.org/')
@@ -63,6 +62,7 @@ class IngestObservation(Observation):
         data = {
             'sample_id': get_nested(cell_suspension, ['content', 'biomaterial_core', 'biomaterial_id']),
             'assay_ontology_term_id': get_nested(lib_prep, ['content', 'library_construction_method', 'text']),
+            'cell_type_ontology_term_id': self.__get_cell_type_ontology(cell_type),
             'development_stage_ontology_term_id:human':
                 get_nested(donor_organism, ['content', 'development_stage', 'text']),
             'disease_ontology_term_id': get_nested(diseases, [0, 'text']),
@@ -182,3 +182,9 @@ class IngestObservation(Observation):
             if biomaterial and biomaterial_type == to_try[2]:
                 return biomaterial['content']['organ_parts'][0]['text']
         return None
+
+    def __get_cell_type_ontology(self, cell_type) -> str:
+        # Talk to wei about this
+        # AFAIK should get an ontology term from a given user defined cell type
+
+        return 'NOT IMPLEMENTED YET'
