@@ -19,8 +19,12 @@ def __load_matrix(matrix_file_path) -> SparseDtype:
         return pd.DataFrame.sparse.from_spmatrix(matrix)
 
 
-def generate(cell_suspension_uuid, matrix_file_path):
+def generate(cell_suspension_uuid, matrix_file_path, barcode_file_path, cell_type):
     # UNTESTED
+    # barcode_file_path will be used to generate the ID column of the obs layer
+    # barcode file is a one column TSV with the same amount of rows as the transpose of the matrix
+    # each barcode maps to one row of the transpose of the matrix
+    # cell_type is a free text field that will be used to get the ontology of the cell_type
 
     # 1. get matrix file
     # 2. generate obs layer using IngestObservation(cell_suspension_uuid).to_data_frame()
