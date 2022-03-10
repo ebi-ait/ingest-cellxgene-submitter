@@ -68,7 +68,7 @@ def create_h5ad():
     parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
     parser.add_argument('--uuid', type=str, help='HCA cell suspension UUID', required=True) # should be a list of uuids?
     parser.add_argument('--matrix', type=str, help='Path to matrix file', required=True) # should be list?
-    parser.add_argument('--barcode', type=str, help='Path to matrix file', required=True) # should be list?
+    parser.add_argument('--barcode', type=str, help='Path to barcode file', required=True) # should be list?
     parser.add_argument('--type', type=str, help='Cell type', required=True) # should be list?
     parser.add_argument(
         '-o', '--output', type=str, help='Output file', default=Path(os.environ.get('OUTPUT_PATH', 'output'), 'obs.csv')
