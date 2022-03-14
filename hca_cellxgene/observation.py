@@ -183,7 +183,10 @@ class IngestObservation(Observation):
                 if biomaterial and biomaterial_type == to_try[1]:
                     return biomaterial['content']['tissue']['text']
                 if biomaterial and biomaterial_type == to_try[2]:
-                    return biomaterial['content']['organ_parts'][0]['text']
+                    if 'organ_parts' in biomaterial['content']:
+                        return biomaterial['content']['organ_parts'][0]['text']
+                    else:
+                        return biomaterial['content']['organ']['ontology']
             except KeyError as e:
                 logging.warning(f'Failed to get tissue_ontology_term_id for {biomaterial_type} with uuid '
                                 f'{biomaterial["uuid"]["uuid"]}')
