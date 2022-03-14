@@ -173,14 +173,19 @@ class IngestObservation(Observation):
         to_try = ['organoid', 'cell_line', 'specimen_from_organism']
         for biomaterial_type in to_try:
             biomaterial = self.flat_chain.get_link(biomaterial_type)
-            if biomaterial and biomaterial_type == to_try[0]:
-                if 'model_organ_part' in biomaterial['content']:
-                    return biomaterial['content']['model_organ_part']['text']
-                return biomaterial['content']['model_organ']['text']
-            if biomaterial and biomaterial_type == to_try[1]:
-                return biomaterial['content']['tissue']['text']
-            if biomaterial and biomaterial_type == to_try[2]:
-                return biomaterial['content']['organ_parts'][0]['text']
+            try:
+                if biomaterial and biomaterial_type == to_try[0]:
+                    if 'model_organ_part' in biomaterial['content']:
+                        return biomaterial['content']['model_organ_part']['text']
+                    return biomaterial['content']['model_organ']['text']
+                if biomaterial and biomaterial_type == to_try[1]:
+                    return biomaterial['content']['tissue']['text']
+                if biomaterial and biomaterial_type == to_try[2]:
+                    return biomaterial['content']['organ_parts'][0]['text']
+            except KeyError as e:
+                logging.warning(f'Failed to get tissue_ontology_term_id for {biomaterial_type} with '
+                                f'{biomaterial["uuid"]["uuid"]}')
+                logging.warning(f'ERROR: {e}')
         return None
 
     def __get_cell_type_ontology(self, cell_type) -> str:
