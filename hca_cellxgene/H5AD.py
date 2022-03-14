@@ -34,13 +34,23 @@ def __build_obs_row(row: (str, str)) -> DataFrame:
     return OBSERVATION_CACHE[cell_suspension_uuid].to_data_frame()
 
 
-def generate(input_csv_path, matrix_file_path):
+def __build_obs(input_csv_path) -> DataFrame:
     rows = ((r[1]['index'], r[1]['uuid']) for r in pd.read_csv(input_csv_path).iterrows())
 
     with Pool() as p:
         obs_layer_rows = p.map(__build_obs_row, rows)
         obs_layer = pd.concat(obs_layer_rows)
-        matrix = __load_matrix(matrix_file_path)
-        h5ad = ad.AnnData(matrix, obs_layer)
-        h5ad.write(Path(os.environ['OUTPUT_PATH'], 'output.h5ad'))
+
+    return obs_layer
+
+
+def generate_obs(input_csv_path):
+    __build_obs(input_csv_path).to_csv(Path(os.environ['OUTPUT_PATH'], 'obs.csv'))
+
+
+def generate(input_csv_path, matrix_file_path):
+    obs_layer = __build_obs(input_csv_path)
+    matrix = __load_matrix(matrix_file_path)
+    h5ad = ad.AnnData(matrix, obs_layer)
+    h5ad.write(Path(os.environ['OUTPUT_PATH'], 'output.h5ad'))
 

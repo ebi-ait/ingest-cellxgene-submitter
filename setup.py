@@ -20,8 +20,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'create-obs-layer=hca_cellxgene.cli:create_obs_layer',
-            'create-obs-layer-multiple=hca_cellxgene.cli:create_obs_layer_from_multiple',
+            'create-obs=hca_cellxgene.cli:create_obs',
             'create-h5ad=hca_cellxgene.cli:create_h5ad'
         ],
     },

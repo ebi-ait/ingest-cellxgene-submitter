@@ -13,13 +13,5 @@ Tools to convert HCA projects in Ingest to a format ready for submission into [C
 1. Create a virtual environment and source it
 1. `pip install .`
 1. `mkdir output`
-1. `create-obs-layer --uuid <CELL SUSPENSION UUID>`
-
-### Create obs layer from multiple cell suspension UUIDS
-Same as the above but takes a CSV of cell suspension UUIDs and cell types
-1. Clone this repo and cd to it
-1. create a venv and source it
-1. `pip install .`
-1. Create a CSV of cell suspension UUIDs and cell types with a header row of `uuid,cell_type`
-1. `mkdir output`
-1. `create-obs-layer-from-multiple --input <PATH TO YOUR CSV>`
+1. Create a CSV of cell suspension UUIDs and indices (barcodes) with a header row of `index,uuid`
+1. `create-obs --input <PATH TO CSV>`
