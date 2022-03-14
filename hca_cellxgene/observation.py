@@ -61,15 +61,15 @@ class IngestObservation(Observation):
 
         data = {
             'sample_id': get_nested(cell_suspension, ['content', 'biomaterial_core', 'biomaterial_id']),
-            'assay_ontology_term_id': get_nested(lib_prep, ['content', 'library_construction_method', 'text']),
+            'assay_ontology_term_id': get_nested(lib_prep, ['content', 'library_construction_method', 'ontology']),
             'cell_type_ontology_term_id': self.__get_cell_type_ontology(cell_type),
             'development_stage_ontology_term_id:human':
-                get_nested(donor_organism, ['content', 'development_stage', 'text']),
-            'disease_ontology_term_id': get_nested(diseases, [0, 'text']),
+                get_nested(donor_organism, ['content', 'development_stage', 'ontology']),
+            'disease_ontology_term_id': get_nested(diseases, [0, 'ontology']),
             'ethnicity_ontology_term_id:human':
-                get_nested(donor_organism, ['content', 'human_specific', 'ethnicity', 0, 'text']),
+                get_nested(donor_organism, ['content', 'human_specific', 'ethnicity', 0, 'ontology']),
             'is_primary_data': True,
-            'organism_ontology_term_id': get_nested(donor_organism, ['content', 'genus_species', 0, 'text']),
+            'organism_ontology_term_id': get_nested(donor_organism, ['content', 'genus_species', 0, 'ontology']),
             'sex_ontology_term_id': get_nested(donor_organism, ['content', 'sex']),
             'tissue_ontology_term_id': self.__get_tissue_ontology_term()
         }
