@@ -70,7 +70,7 @@ class IngestObservation(Observation):
                 get_nested(donor_organism, ['content', 'human_specific', 'ethnicity', 0, 'ontology']),
             'is_primary_data': True,
             'organism_ontology_term_id': get_nested(donor_organism, ['content', 'genus_species', 0, 'ontology']),
-            'sex_ontology_term_id': get_nested(donor_organism, ['content', 'sex']),
+            'sex_ontology_term_id': IngestObservation.__get_sex_ontology_term(donor_organism),
             'tissue_ontology_term_id': self.__get_tissue_ontology_term()
         }
 
@@ -198,3 +198,12 @@ class IngestObservation(Observation):
         # AFAIK should get an ontology term from a given user defined cell type
 
         return 'NOT IMPLEMENTED YET'
+
+    @staticmethod
+    def __get_sex_ontology_term(donor_organism) -> Optional[str]:
+        sex = get_nested(donor_organism, ['content', 'sex'])
+        if sex == 'male':
+            return 'PATO:0000384'
+        if sex == 'female':
+            return 'PATO:0000383'
+        return None
