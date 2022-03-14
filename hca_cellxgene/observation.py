@@ -29,7 +29,7 @@ class Observation:
         ]
 
         for field in self.fields:
-            val_if_none = 'UNSET'
+            val_if_none = 'unknown'
             self.__setattr__(field, kwargs.get(field, val_if_none) or val_if_none)
 
     def to_data_frame(self) -> DataFrame:
