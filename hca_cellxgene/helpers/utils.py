@@ -56,7 +56,7 @@ def download_file(url) -> os.PathLike:
 
 def get_nested(d: dict, list_of_keys: [str], default=None):
     for k in list_of_keys:
-        if k not in d:
+        if k not in d and not isinstance(k, int):
             return default
         d = d[k]
     return d
