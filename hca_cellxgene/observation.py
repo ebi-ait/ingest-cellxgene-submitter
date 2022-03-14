@@ -176,17 +176,18 @@ class IngestObservation(Observation):
         for biomaterial_type in to_try:
             biomaterial = self.flat_chain.get_link(biomaterial_type)
             try:
-                if biomaterial and biomaterial_type == to_try[0]:
+                if not biomaterial:
+                    logging.warning(f"No biomaterial for given type {biomaterial_type}")
+                if biomaterial_type == to_try[0]:
                     if 'model_organ_part' in biomaterial['content']:
-                        return biomaterial['content']['model_organ_part']['text']
-                    return biomaterial['content']['model_organ']['text']
-                if biomaterial and biomaterial_type == to_try[1]:
-                    return biomaterial['content']['tissue']['text']
-                if biomaterial and biomaterial_type == to_try[2]:
+                        return biomaterial['content']['model_organ_part']['ontology']
+                    return biomaterial['content']['model_organ']['ontology']
+                if biomaterial_type == to_try[1]:
+                    return biomaterial['content']['tissue']['ontology']
+                if biomaterial_type == to_try[2]:
                     if 'organ_parts' in biomaterial['content']:
-                        return biomaterial['content']['organ_parts'][0]['text']
-                    else:
-                        return biomaterial['content']['organ']['ontology']
+                        return biomaterial['content']['organ_parts'][0]['ontology']
+                    return biomaterial['content']['organ']['ontology']
             except KeyError as e:
                 logging.warning(f'Failed to get tissue_ontology_term_id for {biomaterial_type} with uuid '
                                 f'{biomaterial["uuid"]["uuid"]}')
