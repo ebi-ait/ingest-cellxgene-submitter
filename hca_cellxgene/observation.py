@@ -99,6 +99,7 @@ class IngestObservation(Observation):
             if lib_prep and lib_preps[0]['uuid']['uuid'] != lib_prep['uuid']['uuid']:
                 logging.warning(f"Cell suspension {cell_suspension['uuid']['uuid']} should only be associated to one "
                                 f"library preparation protocol.")
+                logging.warning(f"Using the first library preparation protocol with UUID {lib_prep['uuid']['uuid']}")
 
             lib_prep = lib_preps[0]
         return lib_prep
