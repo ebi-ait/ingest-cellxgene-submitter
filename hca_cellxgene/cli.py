@@ -66,10 +66,10 @@ def create_h5ad():
     #  and cell types to generate one h5ad for all matrices in a given project
 
     parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
-    parser.add_argument('--uuid', type=str, help='HCA cell suspension UUID', required=True) # should be a list of uuids?
-    parser.add_argument('--matrix', type=str, help='Path to matrix file', required=True) # should be list?
-    parser.add_argument('--barcode', type=str, help='Path to barcode file', required=True) # should be list?
-    parser.add_argument('--type', type=str, help='Cell type', required=True) # should be list?
+    parser.add_argument('--input', type=str, help='CSV of HCA cell suspension UUIDs and associated cell type on each '
+                                                  'row. Expects first row to be header row of "index", "uuid", "type"',
+                        required=True)
+    parser.add_argument('--matrix', type=str, help='Path to matrix file', required=True)
     parser.add_argument(
         '-o', '--output', type=str, help='Output file', default=Path(os.environ.get('OUTPUT_PATH', 'output'), 'obs.csv')
     )
@@ -80,4 +80,4 @@ def create_h5ad():
     if args.debug:
         logger.setLevel(logging.INFO)
 
-    H5AD.generate(args.uuid, args.matrix, args.barcode, args.type)
+    H5AD.generate(args.input, args.matrix)
