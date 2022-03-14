@@ -29,7 +29,7 @@ def create_obs_layer():
     if args.debug:
         logger.setLevel(logging.INFO)
 
-    df = IngestObservation(args.uuid).to_data_frame()
+    df = IngestObservation(args.uuid, 'test').to_data_frame()
     df.to_csv(args.output)
 
 
