@@ -18,7 +18,7 @@ load_dotenv()
 def create_obs():
     parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
     parser.add_argument('--input', type=str, help='CSV of HCA cell suspension UUIDs and associated cell type on each '
-                                                  'row. Expects first row to be header row of "index, "uuid"',
+                                                  'row. Expects first row to be header row of "index, "uuid", "type"',
                         required=True)
     parser.add_argument('--debug', action='store_true', default=False)
 
@@ -36,9 +36,9 @@ def create_h5ad():
 
     parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
     parser.add_argument('--input', type=str, help='CSV of HCA cell suspension UUIDs and associated cell type on each '
-                                                  'row. Expects first row to be header row of "index", "uuid", "type"',
+                                                  'row. Expects first row to be header row of '
+                                                  '"index", "uuid", "matrix", "type"',
                         required=True)
-    parser.add_argument('--matrix', type=str, help='Path to matrix file', required=True)
     parser.add_argument(
         '-o', '--output', type=str, help='Output file', default=Path(os.environ.get('OUTPUT_PATH', 'output'), 'obs.csv')
     )
@@ -49,4 +49,4 @@ def create_h5ad():
     if args.debug:
         logger.setLevel(logging.INFO)
 
-    H5AD.generate(args.input, args.matrix)
+    H5AD.generate(args.input)

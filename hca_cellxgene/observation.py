@@ -196,8 +196,8 @@ class IngestObservation(Observation):
     def __get_cell_type_ontology(self, cell_type) -> str:
         # Talk to wei about this
         # AFAIK should get an ontology term from a given user defined cell type
-
-        return 'NOT IMPLEMENTED YET'
+        # For now just return the user defined cell type
+        return cell_type
 
     @staticmethod
     def __get_sex_ontology_term(donor_organism) -> Optional[str]:
