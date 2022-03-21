@@ -1,6 +1,7 @@
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import anndata as ad
@@ -41,22 +42,28 @@ def generate_obs(uuid: str, cell_type: str, rows: int):
     obs.to_csv(Path(os.environ['OUTPUT_PATH'], 'obs.csv'))
 
 
+def __build_h5ad(inputs: (str, str, str, dict)):
+    uuid, barcodes, matrix, obs = inputs
+    logging.info(f'Generating h5ad file for {uuid}')
+    barcodes = __load_barcodes(barcodes)
+    obs_layer = pd.concat([obs] * len(barcodes.index), ignore_index=True)
+    matrix = __load_matrix(matrix)
+    return ad.AnnData(matrix, obs_layer)
+
+
 def generate(input_csv_path: os.PathLike):
     input_df = pd.read_csv(input_csv_path)
 
     # Build the observation layers for each cell suspension UUID in parallel to speed things up
+    # Using ThreadPool as this is an IO bound task
     with ThreadPoolExecutor() as executor:
         unique_obs_rows = executor.map(__build_obs_row, [(x[1]['uuid'], x[1]['type']) for x in input_df.iterrows()])
         obs_map = {x[0]: x[1] for x in unique_obs_rows}
 
-    adatas = []
-    for _, row in input_df.iterrows():
-        logging.info(f'Generating h5ad file for {row["uuid"]}')
-        barcodes = __load_barcodes(row['barcodes'])
-        obs_row_for_uuid = obs_map[row['uuid']]
-        obs_layer = pd.concat([obs_row_for_uuid]*len(barcodes.index), ignore_index=True)
-        matrix = __load_matrix(row['matrix'])
-        adatas.append(ad.AnnData(matrix, obs_layer))
+    # Using Processes as this is a memory bound task
+    with ProcessPoolExecutor() as executor:
+        input_args = [(x[1]['uuid'], x[1]['barcodes'], x[1]['matrix'], obs_map[x[1]['uuid']]) for x in input_df.iterrows()]
+        adatas = executor.map(__build_h5ad, input_args)
 
     logging.info("Concatenating all h5ads into one h5ad")
     concatenated = ad.concat(adatas)
