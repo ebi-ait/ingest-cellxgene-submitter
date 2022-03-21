@@ -26,5 +26,6 @@ This tool is useful if you already have an H5AD file and want to create one that
 
 1. `create-obs --uuid <cell suspension uuid> --type <cell type> --rows <number of rows`
     1. Rows should correspond to the number of rows in the X layer of the h5ad
+1. It will output a file to `output/` that is a CSV of the DataFrame for the obs layer
 
 
