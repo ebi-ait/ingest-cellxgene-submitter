@@ -17,10 +17,10 @@ load_dotenv()
 
 def create_obs():
     parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
-    parser.add_argument('--uuid', 'Cell suspension UUID', type=str, required=True)
-    parser.add_argument('--type', 'Cell type', type=str, required=True)
-    parser.add_argument('--rows', 'Count of the number of rows in output CSV. The row will be duplicated this number'
-                                  'of times', type=int, default=1)
+    parser.add_argument('--uuid', help='Cell suspension UUID', type=str, required=True)
+    parser.add_argument('--type', help='Cell type', type=str, required=True)
+    parser.add_argument('--rows', help='Count of the number of rows in output CSV. The row will be duplicated '
+                                       'this number of times', type=int, default=1)
     parser.add_argument('--debug', action='store_true', default=False)
 
     args = parser.parse_args()

@@ -35,7 +35,7 @@ def __build_obs_row(uuid_and_type: (str, str)) -> (str, DataFrame):
 def generate_obs(uuid: str, cell_type: str, rows: int):
     if rows < 1:
         raise IndexError("Rows cannot be less than 1")
-    obs = __build_obs_row((uuid, cell_type))
+    obs = __build_obs_row((uuid, cell_type))[1]
     if rows > 1:
         obs = pd.concat([obs]*rows, ignore_index=True)
     obs.to_csv(Path(os.environ['OUTPUT_PATH'], 'obs.csv'))
