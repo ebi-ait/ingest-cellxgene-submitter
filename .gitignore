@@ -4,3 +4,4 @@ __pycache__/
 output/
 
 ingest_cellxgene_submitter.egg-info/
+.idea/
