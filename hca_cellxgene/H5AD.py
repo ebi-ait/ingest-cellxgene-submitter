@@ -58,7 +58,7 @@ def generate(input_csv_path: os.PathLike):
         unique_obs_rows = executor.map(__build_obs_row, input_df['uuid'], input_df['type'])
         obs_map = {x[0]: x[1] for x in unique_obs_rows}
 
-    # Using Processes as this is a memory bound task
+    # Using Processes as this is a CPU bound task
     with ProcessPoolExecutor() as executor:
         obs_layers = (obs_map[x] for x in input_df['uuid'])
         adatas = executor.map(__build_h5ad, input_df['uuid'], input_df['barcodes'], input_df['matrix'], obs_layers)
