@@ -32,26 +32,6 @@ def __build_obs_row(uuid_and_type: (str, str)) -> (str, DataFrame):
     return cell_suspension_uuid, IngestObservation(cell_suspension_uuid, cell_type).to_data_frame()
 
 
-def __build_obs(inputs: [(str, str)]) -> DataFrame:
-    # Build the observation layer only for unique uuids, not for each row as each uuid may be duplicated multiple times
-    # Saves network requests
-    unique_inputs = set(inputs)
-    with ThreadPoolExecutor() as executor:
-        unique_obs_rows = executor.map(__build_obs_row, unique_inputs)
-
-    # Create a hashmap for convenience in later lookup
-    unique_obs_hashmap = {x[0]: x[1] for x in unique_obs_rows}
-
-    # Go through each row in the original file and get the created observations
-    total_obs_rows = []
-    for uuid_and_type in inputs:
-        total_obs_rows.append(unique_obs_hashmap[uuid_and_type[0]])
-
-    # Build the data frame from this result
-    obs_layer = pd.concat(total_obs_rows)
-    return obs_layer
-
-
 def generate_obs(uuid: str, cell_type: str, rows: int):
     if rows < 1:
         raise IndexError("Rows cannot be less than 1")
