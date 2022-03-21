@@ -17,9 +17,10 @@ load_dotenv()
 
 def create_obs():
     parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
-    parser.add_argument('--input', type=str, help='CSV of HCA cell suspension UUIDs and associated cell type on each '
-                                                  'row. Expects first row to be header row of "index, "uuid", "type"',
-                        required=True)
+    parser.add_argument('--uuid', 'Cell suspension UUID', type=str, required=True)
+    parser.add_argument('--type', 'Cell type', type=str, required=True)
+    parser.add_argument('--rows', 'Count of the number of rows in output CSV. The row will be duplicated this number'
+                                  'of times', type=int, default=1)
     parser.add_argument('--debug', action='store_true', default=False)
 
     args = parser.parse_args()
@@ -27,17 +28,14 @@ def create_obs():
     if args.debug:
         logger.setLevel(logging.INFO)
 
-    H5AD.generate_obs(args.input)
+    H5AD.generate_obs(args.uuid, args.type, args.rows)
 
 
 def create_h5ad():
-    # TODO make this take list (or TSV) of multiple matrices and their associated cell suspension_uuids, barcode,
-    #  and cell types to generate one h5ad for all matrices in a given project
-
     parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
-    parser.add_argument('--input', type=str, help='CSV of HCA cell suspension UUIDs and associated cell type on each '
-                                                  'row. Expects first row to be header row of '
-                                                  '"index", "uuid", "matrix", "type"',
+    parser.add_argument('--input', type=str, help='CSV of HCA cell suspension UUIDs and associated matrix file, '
+                                                  'barcodes file, and cell type on each row. Expects first row to be '
+                                                  'header row of "uuid", "matrix", "type", "barcodes"',
                         required=True)
     parser.add_argument(
         '-o', '--output', type=str, help='Output file', default=Path(os.environ.get('OUTPUT_PATH', 'output'), 'obs.csv')
