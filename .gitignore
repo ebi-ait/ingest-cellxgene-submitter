@@ -3,6 +3,7 @@ tmp/
 __pycache__/
 output/
 input/
+example_input/
 
 ingest_cellxgene_submitter.egg-info/
 .idea/

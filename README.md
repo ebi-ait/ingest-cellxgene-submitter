@@ -17,10 +17,12 @@ Tools to convert HCA projects in Ingest to a format ready for submission into [C
     1. The UUID should be the cell suspension UUID in ingest for each matrix
     1. The type should be the cell type ontology for the cell suspension
     1. Barcodes and matrix should be paths relative to the CWD to the barcode and matrix files
-1. Run `create-h5ad --input <PATH TO CSV>`
+1. Run `create-h5ad --input <PATH TO CSV> --title <Title> --x-normalization <e.g. umap>`
     1. You can run it with the `--debug` flag if desired
 1. It will output a file to `output/` that is an H5AD for all the matrices specified in the input CSV
 
+
+**Note**: Example input files are in the example_input.tar.gz
 ### Create obs layer
 This tool is useful if you already have an H5AD file and want to create one that is up to the cellxgene spec
 

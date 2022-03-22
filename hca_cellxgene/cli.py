@@ -50,3 +50,7 @@ def create_h5ad():
         logger.setLevel(logging.INFO)
 
     H5AD.generate(args.input, args.title, args.x_normalization)
+
+
+if __name__ == "__main__":
+    create_h5ad()
