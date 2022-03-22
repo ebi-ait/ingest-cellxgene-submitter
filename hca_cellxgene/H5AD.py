@@ -20,11 +20,10 @@ def __load_barcodes(barcode_file_path) -> DataFrame:
 
 
 def __load_matrix(matrix_file_path) -> SparseDtype:
-    with open(matrix_file_path) as file:
-        matrix_file = sio.mmread(file)
-        # Use a sparse data frame since most values are 0 and it's more efficient
-        matrix = pd.DataFrame.sparse.from_spmatrix(matrix_file)
-        return matrix.transpose()
+    matrix_file = sio.mmread(matrix_file_path)
+    # Use a sparse data frame since most values are 0 and it's more efficient
+    matrix = pd.DataFrame.sparse.from_spmatrix(matrix_file)
+    return matrix.transpose()
 
 
 def __build_obs_row(cell_suspension_uuid: str, cell_type: str) -> (str, DataFrame):
