@@ -40,8 +40,7 @@ def generate_obs(uuid: str, cell_type: str, rows: int):
     obs.to_csv(Path(os.environ['OUTPUT_PATH'], 'obs.csv'))
 
 
-def __build_h5ad(uuid: str, barcodes: str, matrix: str, obs: DataFrame) -> ad.AnnData:
-    logging.info(f'Generating h5ad file for {uuid}')
+def __build_h5ad(barcodes: str, matrix: str, obs: DataFrame) -> ad.AnnData:
     barcodes = __load_barcodes(barcodes)
     obs_layer = pd.concat([obs] * len(barcodes.index), ignore_index=True)
     matrix = __load_matrix(matrix)
@@ -60,7 +59,7 @@ def generate(input_csv_path: os.PathLike, title: str, x_normalization: str):
     # Using Processes as this is a CPU bound task
     with ProcessPoolExecutor() as executor:
         obs_layers = (obs_map[x] for x in input_df['uuid'])
-        adatas = executor.map(__build_h5ad, input_df['uuid'], input_df['barcodes'], input_df['matrix'], obs_layers)
+        adatas = executor.map(__build_h5ad, input_df['barcodes'], input_df['matrix'], obs_layers)
 
     logging.info("Concatenating all h5ads into one h5ad")
     concatenated = ad.concat(adatas)
