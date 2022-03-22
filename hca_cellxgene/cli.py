@@ -37,6 +37,8 @@ def create_h5ad():
                                                   'barcodes file, and cell type on each row. Expects first row to be '
                                                   'header row of "uuid", "matrix", "type", "barcodes"',
                         required=True)
+    parser.add_argument('--title', type=str, required=True, help="Title for the uns layer")
+    parser.add_argument('--x-normalization', type=str, required=True, help="Type of normalization. Used in uns layer")
     parser.add_argument(
         '-o', '--output', type=str, help='Output file', default=Path(os.environ.get('OUTPUT_PATH', 'output'), 'obs.csv')
     )
@@ -47,4 +49,4 @@ def create_h5ad():
     if args.debug:
         logger.setLevel(logging.INFO)
 
-    H5AD.generate(args.input)
+    H5AD.generate(args.input, args.title, args.x_normalization)

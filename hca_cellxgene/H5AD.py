@@ -49,7 +49,7 @@ def __build_h5ad(uuid: str, barcodes: str, matrix: str, obs: dict) -> ad.AnnData
     return ad.AnnData(matrix, obs_layer)
 
 
-def generate(input_csv_path: os.PathLike):
+def generate(input_csv_path: os.PathLike, title: str, x_normalization: str):
     input_df = pd.read_csv(input_csv_path)
 
     # Build the observation layers for each cell suspension UUID in parallel to speed things up
@@ -65,6 +65,11 @@ def generate(input_csv_path: os.PathLike):
 
     logging.info("Concatenating all h5ads into one h5ad")
     concatenated = ad.concat(adatas)
+    concatenated.uns = {
+        "schema_version": os.environ.get('UNS_SCHEMA_VERSION'),
+        "title": title,
+        "X_normalization": x_normalization,
+    }
     output_path = Path(os.environ['OUTPUT_PATH'], 'output.h5ad')
     concatenated.write(output_path)
     logging.info(f"Finished generating h5ad output and written to {output_path}.")
