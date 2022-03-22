@@ -40,7 +40,7 @@ def generate_obs(uuid: str, cell_type: str, rows: int):
     obs.to_csv(Path(os.environ['OUTPUT_PATH'], 'obs.csv'))
 
 
-def __build_h5ad(uuid: str, barcodes: str, matrix: str, obs: dict) -> ad.AnnData:
+def __build_h5ad(uuid: str, barcodes: str, matrix: str, obs: DataFrame) -> ad.AnnData:
     logging.info(f'Generating h5ad file for {uuid}')
     barcodes = __load_barcodes(barcodes)
     obs_layer = pd.concat([obs] * len(barcodes.index), ignore_index=True)
