@@ -2,6 +2,7 @@ tmp/
 .idea/
 __pycache__/
 output/
+input/
 
 ingest_cellxgene_submitter.egg-info/
 .idea/
