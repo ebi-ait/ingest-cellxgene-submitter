@@ -3,11 +3,9 @@ import logging
 import os
 from pathlib import Path
 
-import pandas as pd
 from dotenv import load_dotenv
 
 from hca_cellxgene import H5AD
-from hca_cellxgene.observation import IngestObservation
 
 logging.basicConfig()
 logger = logging.getLogger()
