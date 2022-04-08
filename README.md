@@ -31,3 +31,11 @@ This tool is useful if you already have an H5AD file and want to create one that
 1. It will output a file to `output/` that is a CSV of the DataFrame for the obs layer
 
 
+#### Using an input CSV
+Alternatively, you can create an obs layer from a CSV containing cell suspension UUIDs and cell types:
+
+`create-obs --csv <path to input CSV>`
+
+The header row of the input must be "uuid,type"
+
+

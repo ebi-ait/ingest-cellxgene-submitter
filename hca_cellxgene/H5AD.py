@@ -27,8 +27,13 @@ def __load_matrix(matrix_file_path) -> SparseDtype:
 
 
 def __build_obs_row(cell_suspension_uuid: str, cell_type: str) -> (str, DataFrame):
+    print(cell_suspension_uuid, cell_type)
     logging.info(f'building obs row for {cell_suspension_uuid}')
     return cell_suspension_uuid, IngestObservation(cell_suspension_uuid, cell_type).to_data_frame()
+
+
+def __save_obs(obs: DataFrame):
+    obs.to_csv(Path(os.environ['OUTPUT_PATH'], 'obs.csv'))
 
 
 def generate_obs(uuid: str, cell_type: str, rows: int):
@@ -37,7 +42,28 @@ def generate_obs(uuid: str, cell_type: str, rows: int):
     obs = __build_obs_row(uuid, cell_type)[1]
     if rows > 1:
         obs = pd.concat([obs]*rows, ignore_index=True)
-    obs.to_csv(Path(os.environ['OUTPUT_PATH'], 'obs.csv'))
+    __save_obs(obs)
+
+
+def generate_obs_from_csv(input_csv: os.PathLike):
+    uuids_and_types = [(r[1]['uuid'], r[1]['type']) for r in pd.read_csv(input_csv).iterrows()]
+
+    # Build the observation layer only for unique uuids, not for each row as each uuid may be duplicated multiple times
+    # Saves network requests
+    unique_inputs = set(uuids_and_types)
+    with ThreadPoolExecutor() as executor:
+        unique_obs_rows = executor.map(__build_obs_row, (x[0] for x in unique_inputs), (x[1] for x in unique_inputs))
+
+    # Create a hashmap for convenience in later lookup
+    unique_obs_hashmap = {x[0]: x[1] for x in unique_obs_rows}
+
+    # Go through each row in the original file and get the created observations
+    total_obs_rows = []
+    for uuid_and_type in uuids_and_types:
+        total_obs_rows.append(unique_obs_hashmap[uuid_and_type[0]])
+
+    # Build the data frame from this result
+    __save_obs(pd.concat(total_obs_rows))
 
 
 def __build_h5ad(barcodes: str, matrix: str, obs: DataFrame) -> ad.AnnData:

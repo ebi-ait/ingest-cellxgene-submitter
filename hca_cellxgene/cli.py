@@ -17,17 +17,27 @@ load_dotenv()
 
 def create_obs():
     parser = argparse.ArgumentParser(description='Create a CSV file for the obs layer of an h5ad file')
-    parser.add_argument('--uuid', help='Cell suspension UUID', type=str, required=True)
-    parser.add_argument('--type', help='Cell type', type=str, required=True)
+    parser.add_argument('--uuid', help='Cell suspension UUID', type=str)
+    parser.add_argument('--type', help='Cell type', type=str)
     parser.add_argument('--rows', help='Count of the number of rows in output CSV. The row will be duplicated '
                                        'this number of times', type=int, default=1)
     parser.add_argument('--debug', action='store_true', default=False)
+    parser.add_argument('--csv', help="CSV of header 'uuid, type'. Each row will map to one row in the output h5ad."
+                                      "Use instead of uuid, type, and rows flag")
 
     args = parser.parse_args()
 
     if args.debug:
         logger.setLevel(logging.INFO)
 
+    if args.csv and (args.type or args.uuid):
+        raise IOError("You cannot use the CSV argument as well as type and uuid.")
+    if args.csv:
+        H5AD.generate_obs_from_csv(args.csv)
+        return
+
+    if not args.csv and not (args.type and args.uuid):
+        raise IOError("If you are not using CSV argument you must specify at least uuid and type.")
     H5AD.generate_obs(args.uuid, args.type, args.rows)
 
 
