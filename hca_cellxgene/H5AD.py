@@ -27,7 +27,6 @@ def __load_matrix(matrix_file_path) -> SparseDtype:
 
 
 def __build_obs_row(cell_suspension_uuid: str, cell_type: str) -> (str, DataFrame):
-    print(cell_suspension_uuid, cell_type)
     logging.info(f'building obs row for {cell_suspension_uuid}')
     return cell_suspension_uuid, IngestObservation(cell_suspension_uuid, cell_type).to_data_frame()
 
