@@ -40,7 +40,7 @@ def generate_obs(uuid: str, cell_type: str = None, rows: int = 1):
         raise IndexError("Rows cannot be less than 1")
     obs = __build_obs_row(uuid, cell_type)[1]
     if rows > 1:
-        obs = pd.concat([obs]*rows, ignore_index=True)
+        obs = pd.concat([obs.to_data_frame()]*rows, ignore_index=True)
     __save_obs(obs)
 
 
