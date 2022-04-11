@@ -98,8 +98,9 @@ class IngestObservation(Observation):
             lib_preps = [x for x in output_protocols if 'library_preparation_protocol' in x['content']['describedBy']]
 
             if len(lib_preps) > 1:
-                raise IndexError(
+                logging.warning(
                     f"Process {process['uuid']['uuid']} should only have one library preparation protocol."
+                    f" Using the first one."
                 )
 
             if lib_prep and lib_preps[0]['uuid']['uuid'] != lib_prep['uuid']['uuid']:
