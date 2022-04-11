@@ -2,6 +2,7 @@
 Tools to convert HCA projects in Ingest to a format ready for submission into [CellxGene](https://cellxgene.cziscience.com/).
 
 ## Installation
+1. Ensure you are using python >= 3.9
 1. clone this repo and cd to it
 1. Create a virtual environment and source it
 1. `pip install .`

@@ -7,6 +7,7 @@ install_requires = [line.rstrip() for line in open(os.path.join(base_dir, 'requi
 
 setup(
     name='ingest-cellxgene-submitter',
+    python_requires='>=3.9',
     version='0.0.1',
     packages=find_packages(),
     url='',
