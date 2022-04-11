@@ -11,6 +11,7 @@ from pandas import DataFrame
 from hca_cellxgene.helpers.flat_chain import FlatChain
 from hca_cellxgene.helpers.utils import get_nested
 
+
 class Observation:
     def __init__(self, **kwargs):
         load_dotenv()
@@ -60,7 +61,8 @@ class IngestObservation(Observation):
 
         data = {
             'sample_id': get_nested(cell_suspension, ['content', 'biomaterial_core', 'biomaterial_id']),
-            'assay_ontology_term_id': get_nested(lib_prep, ['content', 'library_construction_method', 'ontology']),
+            'assay_ontology_term_id': None if not lib_prep else
+            get_nested(lib_prep, ['content', 'library_construction_method', 'ontology']),
             'cell_type_ontology_term_id': cell_type,
             'development_stage_ontology_term_id:human':
                 get_nested(donor_organism, ['content', 'development_stage', 'ontology']),
@@ -89,7 +91,7 @@ class IngestObservation(Observation):
         return result
 
     @staticmethod
-    def __get_lib_prep_for_cell_suspension(cell_suspension) -> dict:
+    def __get_lib_prep_for_cell_suspension(cell_suspension) -> Optional[dict]:
         input_to = IngestObservation.__get_entities_from_link(cell_suspension, 'inputToProcesses')
 
         lib_prep = None
@@ -99,9 +101,10 @@ class IngestObservation(Observation):
 
             if len(lib_preps) > 1:
                 logging.warning(
-                    f"Process {process['uuid']['uuid']} should only have one library preparation protocol."
-                    f" Using the first one."
+                    f"Process {process['uuid']['uuid']} should only have one library preparation protocol. "
+                    f"Library preparation cannot be used and associated fields will be left blank in output."
                 )
+                return None
 
             if lib_prep and lib_preps[0]['uuid']['uuid'] != lib_prep['uuid']['uuid']:
                 logging.warning(f"Cell suspension {cell_suspension['uuid']['uuid']} should only be associated to one "
@@ -147,13 +150,19 @@ class IngestObservation(Observation):
         lib_prep = IngestObservation.__get_lib_prep_for_cell_suspension(cell_suspension)
 
         # Can use a FlatChain since we know there can only be one entity of each entity_type in the chain
-        self.flat_chain = FlatChain(
-            IngestObservation.__get_type_of_entity(lib_prep),
-            lib_prep
-        ).append(
-            IngestObservation.__get_type_of_entity(cell_suspension),
-            cell_suspension
-        )
+        if lib_prep:
+            self.flat_chain = FlatChain(
+                IngestObservation.__get_type_of_entity(lib_prep),
+                lib_prep
+            ).append(
+                IngestObservation.__get_type_of_entity(cell_suspension),
+                cell_suspension
+            )
+        else:
+            self.flat_chain = FlatChain(
+                IngestObservation.__get_type_of_entity(cell_suspension),
+                cell_suspension
+            )
 
         while self.flat_chain.current[0] != 'donor_organism':
             derived_by = IngestObservation.__get_entities_from_link(self.flat_chain.current[1], 'derivedByProcesses')
