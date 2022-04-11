@@ -11,6 +11,7 @@ from pandas import DataFrame
 from hca_cellxgene.helpers.flat_chain import FlatChain
 from hca_cellxgene.helpers.utils import get_nested
 
+val_if_none = 'unknown'
 
 class Observation:
     def __init__(self, **kwargs):
@@ -29,7 +30,6 @@ class Observation:
         ]
 
         for field in self.fields:
-            val_if_none = 'unknown'
             self.__setattr__(field, kwargs.get(field, val_if_none) or val_if_none)
 
     def to_data_frame(self) -> DataFrame:
@@ -38,7 +38,7 @@ class Observation:
 
 
 class IngestObservation(Observation):
-    def __init__(self, cell_suspension_uuid, cell_type):
+    def __init__(self, cell_suspension_uuid, cell_type=None):
         self.cell_suspension_uuid = cell_suspension_uuid
 
         ingest_base = os.environ.get('INGEST_API', 'https://api.ingest.archive.data.humancellatlas.org/')
@@ -62,7 +62,7 @@ class IngestObservation(Observation):
         data = {
             'sample_id': get_nested(cell_suspension, ['content', 'biomaterial_core', 'biomaterial_id']),
             'assay_ontology_term_id': get_nested(lib_prep, ['content', 'library_construction_method', 'ontology']),
-            'cell_type_ontology_term_id': self.__get_cell_type_ontology(cell_type),
+            'cell_type_ontology_term_id': cell_type,
             'development_stage_ontology_term_id:human':
                 get_nested(donor_organism, ['content', 'development_stage', 'ontology']),
             'disease_ontology_term_id': get_nested(diseases, [0, 'ontology']),
@@ -75,6 +75,13 @@ class IngestObservation(Observation):
         }
 
         super().__init__(**data)
+
+    def set_cell_type(self, cell_type: str):
+        # Convenience method to allow for setting of cell type after instantiation
+        # Useful if have multiple cell suspensions with the same UUID and different cell types then
+        # can de-deduplicate the creation of observations
+        self.__setattr__('cell_type_ontology_term_id', cell_type or val_if_none)
+        return self
 
     def __get_cell_suspension(self):
         result = self.ingest_api.get_entity_by_uuid('biomaterials', self.cell_suspension_uuid)
@@ -192,12 +199,6 @@ class IngestObservation(Observation):
                                 f'{biomaterial["uuid"]["uuid"]}')
                 logging.warning(f'ERROR: {e}')
         return None
-
-    def __get_cell_type_ontology(self, cell_type) -> str:
-        # Talk to wei about this
-        # AFAIK should get an ontology term from a given user defined cell type
-        # For now just return the user defined cell type
-        return cell_type
 
     @staticmethod
     def __get_sex_ontology_term(donor_organism) -> Optional[str]:
