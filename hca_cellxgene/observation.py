@@ -11,8 +11,6 @@ from pandas import DataFrame
 from hca_cellxgene.helpers.flat_chain import FlatChain
 from hca_cellxgene.helpers.utils import get_nested
 
-val_if_none = 'unknown'
-
 class Observation:
     def __init__(self, **kwargs):
         load_dotenv()
@@ -30,10 +28,11 @@ class Observation:
         ]
 
         for field in self.fields:
-            self.__setattr__(field, kwargs.get(field, val_if_none) or val_if_none)
+            self.__setattr__(field, kwargs.get(field))
 
     def to_data_frame(self) -> DataFrame:
-        to_display = {key: self.__dict__[key] for key in self.fields}
+        val_if_none = 'unknown'
+        to_display = {key: self.__dict__.get(key, val_if_none) or val_if_none for key in self.fields}
         return pd.DataFrame(to_display, index=[0])
 
 
@@ -80,7 +79,7 @@ class IngestObservation(Observation):
         # Convenience method to allow for setting of cell type after instantiation
         # Useful if have multiple cell suspensions with the same UUID and different cell types then
         # can de-deduplicate the creation of observations
-        self.__setattr__('cell_type_ontology_term_id', cell_type or val_if_none)
+        self.__setattr__('cell_type_ontology_term_id', cell_type)
         return self
 
     def __get_cell_suspension(self):
