@@ -15,8 +15,8 @@ from hca_cellxgene.observation import IngestObservation
 load_dotenv()
 
 
-def __load_barcodes(barcode_file_path) -> DataFrame:
-    return pd.read_csv(filepath_or_buffer=barcode_file_path, header=None)
+def __load_basic_csv(file_path) -> DataFrame:
+    return pd.read_csv(filepath_or_buffer=file_path, header=None)
 
 
 def __load_matrix(matrix_file_path) -> SparseDtype:
@@ -66,9 +66,11 @@ def generate_obs_from_csv(input_csv: os.PathLike):
     __save_obs(pd.concat(total_obs_rows))
 
 
-def __build_h5ad(barcodes: str, matrix: str, obs: DataFrame) -> ad.AnnData:
-    barcodes = __load_barcodes(barcodes)
-    obs_layer = pd.concat([obs] * len(barcodes.index), ignore_index=True)
+def __build_h5ad(barcodes: os.PathLike, matrix: os.PathLike, cell_types: os.PathLike,
+                 obs: IngestObservation) -> ad.AnnData:
+    cell_types = __load_basic_csv(cell_types)[0].tolist()
+    obs_rows = [obs.set_cell_type(x).to_data_frame() for x in cell_types]
+    obs_layer = pd.concat(obs_rows, ignore_index=True)
     matrix = __load_matrix(matrix)
     return ad.AnnData(matrix, obs_layer)
 
@@ -79,13 +81,13 @@ def generate(input_csv_path: os.PathLike, title: str, x_normalization: str):
     # Build the observation layers for each cell suspension UUID in parallel to speed things up
     # Using ThreadPool as this is an IO bound task
     with ThreadPoolExecutor() as executor:
-        unique_obs_rows = executor.map(__build_obs_row, input_df['uuid'], input_df['type'])
+        unique_obs_rows = executor.map(__build_obs_row, input_df['uuid'])
         obs_map = {x[0]: x[1] for x in unique_obs_rows}
 
     # Using Processes as this is a CPU bound task
     with ProcessPoolExecutor() as executor:
         obs_layers = (obs_map[x] for x in input_df['uuid'])
-        adatas = executor.map(__build_h5ad, input_df['barcodes'], input_df['matrix'], obs_layers)
+        adatas = executor.map(__build_h5ad, input_df['barcodes'], input_df['matrix'], input_df['types'], obs_layers)
 
     logging.info("Concatenating all h5ads into one h5ad")
     concatenated = ad.concat(adatas)
